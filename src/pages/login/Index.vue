@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { api } from "@/lib/axios";
 import { Eye, EyeOff, Loader2, LockIcon, MailIcon } from "lucide-vue-next";
 import { reactive, ref } from "vue";
 // import { useToast } from "@/components/ui/toast/use-toast";
@@ -57,23 +58,14 @@ const handleSubmit = async () => {
     if (validateForm()) {
         try {
             isLoading.value = true;
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            console.log("Form submitted:", {
-                ...formData,
-                rememberMe: rememberMe.value,
+
+            const { data: response } = await api.post("/login", {
+                email: formData.email,
+                password: formData.password,
             });
-            // toast({
-            //     title: "Success!",
-            //     description: "You have been successfully logged in.",
-            //     variant: "success",
-            // });
-            // Reset form after successful submission
-            Object.assign(formData, {
-                email: "",
-                password: "",
-            });
-            rememberMe.value = false;
+
+            if (response.data) {
+            }
         } catch (error) {
             console.error("Login error:", error);
             // toast({

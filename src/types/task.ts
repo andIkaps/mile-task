@@ -1,0 +1,9 @@
+export interface ITask {
+    id: number;
+    title: string;
+    description: string;
+    createdAt: string;
+    createdBy: string;
+    priority: string;
+    isComplete: boolean;
+}

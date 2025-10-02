@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { Menu, X, ShoppingCart, LogOut } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
+import { LogOut, Menu, X } from "lucide-vue-next";
+import { ref } from "vue";
 
 const isOpen = ref(false);
 
@@ -18,14 +18,12 @@ const rightNavigation = [{ name: "Profile", href: "#" }];
             <nav class="flex items-center justify-between">
                 <!-- Left Navigation -->
                 <div class="hidden md:flex items-center space-x-8">
-                    <a
-                        v-for="item in leftNavigation"
-                        :key="item.name"
-                        :href="item.href"
+                    <RouterLink
+                        :to="{ name: 'task-index' }"
                         class="text-gray-600 hover:text-gray-900"
                     >
-                        {{ item.name }}
-                    </a>
+                        My Task
+                    </RouterLink>
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -82,6 +80,7 @@ const rightNavigation = [{ name: "Profile", href: "#" }];
             </div>
         </div>
     </section>
-
-    <RouterView />
+    <main class="container mx-auto px-4 md:px-6 lg:px-8">
+        <RouterView />
+    </main>
 </template>
