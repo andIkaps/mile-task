@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import empty_image from "@/assets/empty.png";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
     AlertDialog,
@@ -64,6 +65,7 @@ import {
     ArrowUpNarrowWide,
     Clock,
     PackagePlus,
+    Rocket,
     Search,
     Siren,
     Snail,
@@ -76,6 +78,10 @@ import moment from "moment";
 import { useForm } from "vee-validate";
 import { onMounted, reactive, ref, watch, type Ref } from "vue";
 import { taskSchema } from "./schema";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "vue-sonner";
+
+const userData = ref(JSON.parse(localStorage.getItem("userData") || "{}"));
 
 const filter = reactive({
     sortBy: "desc",
@@ -91,6 +97,7 @@ watch(dialog, () => {
         taskId.value = 0;
     }
 });
+const isLoading = ref(false);
 
 const { isFieldDirty, handleSubmit, resetForm, setValues } = useForm({
     validationSchema: taskSchema,
@@ -111,9 +118,12 @@ const fetchTasks = async ({
     sort?: string;
 }) => {
     try {
+        isLoading.value = true;
+
         const params = new URLSearchParams();
         params.append("page", page.toString());
         params.append("limit", "5");
+        params.append("createdBy", userData.value?.username);
         search && params.append("search", search);
         sort && params.append("sort", sort);
 
@@ -125,7 +135,8 @@ const fetchTasks = async ({
         }
     } catch (error) {
         console.log(error);
-
+    } finally {
+        isLoading.value = false;
     }
 };
 
@@ -133,11 +144,16 @@ const onSubmitTask = handleSubmit(async (values) => {
     try {
         const { data: response } = await api.post(
             taskId.value ? `/tasks/${taskId.value}` : "/tasks",
-            values
+            {
+                ...values,
+                createdBy: userData.value?.username,
+            }
         );
 
         if (response.data) {
-            console.log(response.data);
+            toast.success(response.message);
+            dialog.value = false;
+
             fetchTasks({ page: 1 });
         }
     } catch (error) {
@@ -147,14 +163,19 @@ const onSubmitTask = handleSubmit(async (values) => {
 
 const onDelete = async () => {
     try {
+        isLoading.value = true;
+
         const { data: response } = await api.delete(`/tasks/${taskId.value}`);
 
         if (response.data) {
-            console.log(response.data);
+            toast.success(response.message);
+
             fetchTasks({ page: 1 });
         }
     } catch (error) {
         console.log(error);
+    } finally {
+        isLoading.value = false;
     }
 };
 
@@ -236,8 +257,8 @@ onMounted(() => {
             </section>
         </header>
 
-        <main class="space-y-10">
-            <div class="space-y-5">
+        <main v-if="tasks.length" class="space-y-10">
+            <div v-if="!isLoading" class="space-y-5">
                 <Alert
                     v-for="task in tasks"
                     :key="task.id"
@@ -341,6 +362,13 @@ onMounted(() => {
                     </div>
                 </Alert>
             </div>
+            <template v-else>
+                <Skeleton
+                    v-for="i in 5"
+                    :key="i"
+                    class="h-22 w-full rounded-sm"
+                />
+            </template>
 
             <Pagination
                 v-slot="{ page }"
@@ -348,7 +376,12 @@ onMounted(() => {
                 :total="metaTask?.total"
                 :default-page="1"
             >
-                <PaginationContent v-slot="{ items }">
+                <PaginationContent
+                    v-slot="{ items }"
+                    :class="{
+                        'pointer-events-none': isLoading,
+                    }"
+                >
                     <PaginationPrevious
                         @click="
                             () => {
@@ -379,6 +412,20 @@ onMounted(() => {
                 </PaginationContent>
             </Pagination>
         </main>
+        <div v-else>
+            <section
+                class="w-full py-10 flex flex-col justify-center items-center text-center gap-2"
+            >
+                <img :src="empty_image" class="w-28" />
+
+                <h1 class="text-lg font-semibold">Task Empty</h1>
+                <p class="text-sm">
+                    <span class="text-gray-500">
+                        The task you added will be displayed here.
+                    </span>
+                </p>
+            </section>
+        </div>
     </section>
 
     <Dialog v-model:open="dialog">

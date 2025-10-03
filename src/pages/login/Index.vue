@@ -3,49 +3,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/axios";
-import { Eye, EyeOff, Loader2, LockIcon, MailIcon } from "lucide-vue-next";
+import { Eye, EyeOff, Loader2, LockIcon, User } from "lucide-vue-next";
 import { reactive, ref } from "vue";
-// import { useToast } from "@/components/ui/toast/use-toast";
+import { useRouter } from "vue-router";
 
-const email = ref("user@shadcnblocks-vue.com");
-const password = ref("123456789");
+const router = useRouter();
 
 const formData = reactive({
-    email: email.value,
-    password: password.value,
-});
-
-const errors = reactive({
-    email: "",
+    username: "",
     password: "",
 });
 
-const rememberMe = ref(false);
+const errors = reactive({
+    username: "",
+    password: "",
+});
+
 const isLoading = ref(false);
 const showPassword = ref(false);
-// const toast = useToast();
 
 const validateForm = () => {
     let isValid = true;
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email) {
-        errors.email = "Please enter your email address";
-        isValid = false;
-    } else if (!emailRegex.test(formData.email)) {
-        errors.email = "Please enter a valid email address";
+    if (!formData.username) {
+        errors.username = "Please enter your username";
         isValid = false;
     } else {
-        errors.email = "";
+        errors.username = "";
     }
 
     // Password validation
     if (!formData.password) {
         errors.password = "Please enter your password";
-        isValid = false;
-    } else if (formData.password.length < 8) {
-        errors.password = "Password must be at least 8 characters";
         isValid = false;
     } else {
         errors.password = "";
@@ -60,19 +49,22 @@ const handleSubmit = async () => {
             isLoading.value = true;
 
             const { data: response } = await api.post("/login", {
-                email: formData.email,
+                username: formData.username,
                 password: formData.password,
             });
 
             if (response.data) {
+                const { token, user } = response.data;
+
+                localStorage.setItem("token", token);
+                localStorage.setItem("userData", JSON.stringify(user));
+
+                router.push({
+                    name: "task-index",
+                });
             }
         } catch (error) {
             console.error("Login error:", error);
-            // toast({
-            //     title: "Error",
-            //     description: "Failed to log in. Please try again.",
-            //     variant: "destructive",
-            // });
         } finally {
             isLoading.value = false;
         }
@@ -98,18 +90,17 @@ const handleSubmit = async () => {
                     <form @submit.prevent="handleSubmit" class="space-y-6">
                         <div class="space-y-4">
                             <div class="space-y-2">
-                                <Label for="email">Email</Label>
+                                <Label for="email">Username</Label>
                                 <div class="relative">
-                                    <MailIcon
-                                        class="absolute left-3 top-3 h-5 w-5 text-muted-foreground"
+                                    <User
+                                        class="absolute left-3 top-2 h-5 w-5 text-muted-foreground"
                                     />
                                     <Input
                                         id="email"
-                                        v-model="formData.email"
-                                        type="email"
-                                        placeholder="Enter your email"
+                                        v-model="formData.username"
+                                        placeholder="Enter your username"
                                         :class="{
-                                            'border-red-500': errors.email,
+                                            'border-red-500': errors.username,
                                             'pl-10': true,
                                         }"
                                         :disabled="isLoading"
@@ -117,10 +108,10 @@ const handleSubmit = async () => {
                                     />
                                 </div>
                                 <p
-                                    v-if="errors.email"
+                                    v-if="errors.username"
                                     class="text-sm text-red-500"
                                 >
-                                    {{ errors.email }}
+                                    {{ errors.username }}
                                 </p>
                             </div>
 
@@ -128,7 +119,7 @@ const handleSubmit = async () => {
                                 <Label for="password">Password</Label>
                                 <div class="relative">
                                     <LockIcon
-                                        class="absolute left-3 top-3 h-5 w-5 text-muted-foreground"
+                                        class="absolute left-3 top-2 h-5 w-5 text-muted-foreground"
                                     />
                                     <Input
                                         id="password"
@@ -146,7 +137,7 @@ const handleSubmit = async () => {
                                     />
                                     <button
                                         type="button"
-                                        class="absolute right-3 top-3"
+                                        class="absolute right-3 top-2"
                                         :disabled="isLoading"
                                         @click="showPassword = !showPassword"
                                     >

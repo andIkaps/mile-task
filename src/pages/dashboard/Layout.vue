@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { Button } from "@/components/ui/button";
+import { BaseTooltip } from "@/components/ui/tooltip";
 import { LogOut, Menu, X } from "lucide-vue-next";
 import { ref } from "vue";
 
 const isOpen = ref(false);
+const userData = ref(JSON.parse(localStorage.getItem("userData") || "{}"));
 
-const leftNavigation = [{ name: "My Task", href: "#" }];
-
-const rightNavigation = [{ name: "Profile", href: "#" }];
+const handleLogout = () => {
+    localStorage.removeItem("userData");
+    localStorage.removeItem("token");
+};
 </script>
 
 <template>
@@ -42,18 +45,25 @@ const rightNavigation = [{ name: "Profile", href: "#" }];
                 <!-- Right Navigation -->
                 <div class="flex items-center space-x-8">
                     <div class="hidden md:flex items-center space-x-8">
-                        <a
-                            v-for="item in rightNavigation"
-                            :key="item.name"
-                            :href="item.href"
-                            class="text-gray-600 hover:text-gray-900"
-                        >
-                            {{ item.name }}
-                        </a>
+                        <div>{{ userData?.username || "Guest" }}</div>
                     </div>
-                    <Button variant="ghost" size="icon">
-                        <LogOut class="h-5 w-5" />
-                    </Button>
+                    <BaseTooltip message="Logout?">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            class="cursor-pointer"
+                            @click="
+                                () => {
+                                    handleLogout();
+                                    $router.push({
+                                        name: 'login-index',
+                                    });
+                                }
+                            "
+                        >
+                            <LogOut class="h-5 w-5" />
+                        </Button>
+                    </BaseTooltip>
                 </div>
             </nav>
 
