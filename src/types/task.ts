@@ -5,5 +5,4 @@ export interface ITask {
     createdAt: string;
     createdBy: string;
     priority: string;
-    isComplete: boolean;
 }

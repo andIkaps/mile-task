@@ -1,7 +1,25 @@
 <script setup lang="ts">
-import moment from "moment";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,6 +29,13 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
     Pagination,
@@ -20,6 +45,16 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { BaseTooltip } from "@/components/ui/tooltip";
 import { api } from "@/lib/axios";
 import type { IMeta } from "@/types/meta";
 import type { ITask } from "@/types/task";
@@ -27,43 +62,51 @@ import {
     ArrowDownNarrowWide,
     ArrowDownUp,
     ArrowUpNarrowWide,
-    BatteryMedium,
     Clock,
-    Flame,
     PackagePlus,
     Search,
+    Siren,
     Snail,
     SquarePen,
     Trash2,
+    TriangleAlert,
     User,
 } from "lucide-vue-next";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import { onMounted, reactive, ref, type Ref } from "vue";
-import { BaseTooltip } from "@/components/ui/tooltip";
+import moment from "moment";
+import { useForm } from "vee-validate";
+import { onMounted, reactive, ref, watch, type Ref } from "vue";
+import { taskSchema } from "./schema";
 
 const filter = reactive({
     sortBy: "desc",
     searchKeyword: "",
 });
-
 const tasks: Ref<ITask[]> = ref([]);
 const metaTask: Ref<IMeta> = ref({} as IMeta);
+const taskId = ref<number>();
 const dialog: Ref<boolean> = ref(false);
+watch(dialog, () => {
+    if (!dialog.value) {
+        resetForm();
+        taskId.value = 0;
+    }
+});
+
+const { isFieldDirty, handleSubmit, resetForm, setValues } = useForm({
+    validationSchema: taskSchema,
+    initialValues: {
+        title: "",
+        description: "",
+        priority: "",
+    },
+});
 
 const fetchTasks = async ({
-    page,
+    page = 1,
     search,
     sort = "desc",
 }: {
-    page: number;
+    page?: number;
     search?: string;
     sort?: string;
 }) => {
@@ -80,7 +123,39 @@ const fetchTasks = async ({
             tasks.value = response.data;
             metaTask.value = response.meta;
         }
-    } catch (error) {}
+    } catch (error) {
+        console.log(error);
+
+    }
+};
+
+const onSubmitTask = handleSubmit(async (values) => {
+    try {
+        const { data: response } = await api.post(
+            taskId.value ? `/tasks/${taskId.value}` : "/tasks",
+            values
+        );
+
+        if (response.data) {
+            console.log(response.data);
+            fetchTasks({ page: 1 });
+        }
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+const onDelete = async () => {
+    try {
+        const { data: response } = await api.delete(`/tasks/${taskId.value}`);
+
+        if (response.data) {
+            console.log(response.data);
+            fetchTasks({ page: 1 });
+        }
+    } catch (error) {
+        console.log(error);
+    }
 };
 
 onMounted(() => {
@@ -174,11 +249,11 @@ onMounted(() => {
                                 v-if="task.priority == 'Low'"
                                 class="h-4 w-4 !text-green-600"
                             />
-                            <BatteryMedium
+                            <TriangleAlert
                                 v-if="task.priority == 'Medium'"
                                 class="h-4 w-4 !text-yellow-600"
                             />
-                            <Flame
+                            <Siren
                                 v-if="task.priority == 'High'"
                                 class="h-4 w-4 !text-red-600"
                             />
@@ -204,24 +279,64 @@ onMounted(() => {
                     </div>
 
                     <div class="space-x-3">
-                        <BaseTooltip message="Delete Task?">
+                        <BaseTooltip message="Update Task?">
                             <Button
                                 size="icon"
                                 variant="ghost"
                                 class="cursor-pointer"
+                                @click="
+                                    () => {
+                                        taskId = task.id;
+                                        dialog = true;
+
+                                        setValues({
+                                            title: task.title,
+                                            description:
+                                                task.description || '-',
+                                            priority: task.priority,
+                                        });
+                                    }
+                                "
                             >
                                 <SquarePen class="size-4 !text-yellow-600" />
                             </Button>
                         </BaseTooltip>
 
                         <BaseTooltip message="Delete Task?">
-                            <Button
-                                size="icon"
-                                variant="ghost"
-                                class="cursor-pointer"
-                            >
-                                <Trash2 class="size-4 !text-red-600" />
-                            </Button>
+                            <AlertDialog>
+                                <AlertDialogTrigger as-child>
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        class="cursor-pointer"
+                                        @click="taskId = task.id"
+                                    >
+                                        <Trash2 class="size-4 !text-red-600" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle
+                                            >Are you absolutely
+                                            sure?</AlertDialogTitle
+                                        >
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This
+                                            will permanently delete your account
+                                            and remove your data from our
+                                            servers.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel @click="taskId = 0">
+                                            Cancel
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction @click="onDelete">
+                                            Continue
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </BaseTooltip>
                     </div>
                 </Alert>
@@ -269,14 +384,91 @@ onMounted(() => {
     <Dialog v-model:open="dialog">
         <DialogContent class="sm:max-w-xl">
             <DialogHeader>
-                <DialogTitle>New Task</DialogTitle>
+                <DialogTitle>{{ taskId ? "Update" : "New" }} Task</DialogTitle>
                 <DialogDescription>
                     Please fill all field that you need on below.
                 </DialogDescription>
             </DialogHeader>
-            <DialogFooter>
-                <Button type="submit"> Save changes </Button>
-            </DialogFooter>
+
+            <form @submit="onSubmitTask" class="space-y-5">
+                <FormField
+                    v-slot="{ componentField }"
+                    name="title"
+                    :validate-on-blur="!isFieldDirty"
+                >
+                    <FormItem>
+                        <FormLabel>
+                            <span>Title</span>
+                            <small className="text-red-600 text-xs">
+                                (*)
+                            </small>
+                        </FormLabel>
+                        <FormControl>
+                            <Input type="text" v-bind="componentField" />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                </FormField>
+
+                <FormField v-slot="{ componentField }" name="description">
+                    <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                            <Textarea
+                                class="resize-none"
+                                v-bind="componentField"
+                            />
+                        </FormControl>
+
+                        <FormMessage />
+                    </FormItem>
+                </FormField>
+
+                <FormField v-slot="{ componentField }" name="priority">
+                    <FormItem>
+                        <FormLabel>
+                            <span>Priority</span>
+                            <small className="text-red-600 text-xs">
+                                (*)
+                            </small>
+                        </FormLabel>
+
+                        <Select v-bind="componentField">
+                            <FormControl>
+                                <SelectTrigger class="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectGroup>
+                                    <SelectItem value="Low">
+                                        <Snail
+                                            class="h-4 w-4 !text-green-600"
+                                        />
+                                        <span>Low</span>
+                                    </SelectItem>
+                                    <SelectItem value="Medium">
+                                        <TriangleAlert
+                                            class="h-4 w-4 !text-yellow-600"
+                                        />
+                                        <span>Medium</span>
+                                    </SelectItem>
+                                    <SelectItem value="High">
+                                        <Siren class="h-4 w-4 !text-red-600" />
+                                        <span>High</span>
+                                    </SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+
+                        <FormMessage />
+                    </FormItem>
+                </FormField>
+
+                <DialogFooter>
+                    <Button type="submit"> Save changes </Button>
+                </DialogFooter>
+            </form>
         </DialogContent>
     </Dialog>
 </template>
