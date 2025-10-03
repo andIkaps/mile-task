@@ -194,16 +194,16 @@ onMounted(() => {
                         id="search"
                         type="text"
                         v-model="filter.searchKeyword"
-                        @keypress.enter="
-                            () => {
+                        @update:model-value="
+                            (val) =>
                                 fetchTasks({
                                     page: 1,
-                                    search: filter.searchKeyword,
-                                });
-                            }
+                                    search: val as string,
+                                })
                         "
-                        placeholder="Search and press enter..."
+                        placeholder="Search..."
                         class="pl-8"
+                        :debounce="600"
                     />
                     <span
                         class="absolute start-0 inset-y-0 flex items-center justify-center px-2"
