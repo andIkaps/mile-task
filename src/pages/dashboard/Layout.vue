@@ -70,21 +70,16 @@ const handleLogout = () => {
             <!-- Mobile Navigation Menu -->
             <div
                 v-if="isOpen"
-                class="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 py-4"
+                class="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 py-4 z-50"
             >
                 <div class="container mx-auto px-4">
                     <div class="flex flex-col space-y-4">
-                        <a
-                            v-for="item in [
-                                ...leftNavigation,
-                                ...rightNavigation,
-                            ]"
-                            :key="item.name"
-                            :href="item.href"
+                        <RouterLink
+                            :to="{ name: 'task-index' }"
                             class="text-gray-600 hover:text-gray-900"
                         >
-                            {{ item.name }}
-                        </a>
+                            My Task
+                        </RouterLink>
                     </div>
                 </div>
             </div>

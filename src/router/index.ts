@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 
 const authRequired = (to: any, from: any, next: any) => {
     const token = localStorage.getItem("token");
+    console.log(from);
 
     if (!token) {
         next({ name: "login-index" });

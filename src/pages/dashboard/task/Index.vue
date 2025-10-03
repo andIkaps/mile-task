@@ -54,6 +54,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { BaseTooltip } from "@/components/ui/tooltip";
 import { api } from "@/lib/axios";
@@ -65,7 +66,6 @@ import {
     ArrowUpNarrowWide,
     Clock,
     PackagePlus,
-    Rocket,
     Search,
     Siren,
     Snail,
@@ -77,9 +77,8 @@ import {
 import moment from "moment";
 import { useForm } from "vee-validate";
 import { onMounted, reactive, ref, watch, type Ref } from "vue";
-import { taskSchema } from "./schema";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "vue-sonner";
+import { taskSchema } from "./schema";
 
 const userData = ref(JSON.parse(localStorage.getItem("userData") || "{}"));
 
