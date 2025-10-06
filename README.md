@@ -11,9 +11,7 @@ Modul ini punya dua fitur utama:
 Struktur dasarnya:
 
 -   `/auth/login` → form login, validasi sederhana, simpan token mock ke localStorage.
--   `/tasks` → daftar semua tasks dengan pagination, filter, sorting, dan search.
--   `/tasks/new` → form tambah task baru.
--   `/tasks/:id/edit` → form edit task.
+-   `/tasks` → daftar semua tasks dengan pagination, filter, sorting, dan search berikut dengan aksi untuk tambah, edit dan delete task.
 
 ---
 
