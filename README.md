@@ -21,7 +21,6 @@ Struktur dasarnya:
 -   **Vue Router** → dipakai untuk navigasi antar halaman (login, task list, task form).
 -   **Pinia (opsional)** → untuk manajemen state session user (simpan user login & token).
 -   **Axios** → untuk komunikasi dengan mock API.
--   Struktur komponen dipisah jadi `Base` components (misalnya `BaseTable.vue`, `BaseInput.vue`) supaya gampang dipakai ulang.
 
 ---
 
